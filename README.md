@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/hero.png" alt="Аризона на Linux — пиксельная дорога к закату" width="100%"></p>
+<p align="center"><img src="assets/hero.png" alt="Arizona на Linux — терминал и авторские карточки" width="100%"></p>
 
 <p align="center">
   <a href="#установка"><b>Установить игру</b></a> ·
