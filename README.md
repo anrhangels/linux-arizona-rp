@@ -123,6 +123,8 @@ bash install.sh
 | [Словарь](docs/glossary.md) | Что такое префикс, Proton, Flatpak и другие термины |
 | [Результаты проверок](docs/compatibility.md) | Где игра запускалась и какие ограничения остались |
 
+Работа над проектом велась с помощью ИИ — **OpenAI Codex GPT-6.1-Sol**. [Подробнее о проекте и проверках](docs/provenance.md).
+
 [Все инструкции](docs/README.md) · [Официальные источники](docs/sources.md) · [Сообщить о проблеме](https://github.com/anrhangels/linux-arizona-rp/issues/new/choose)
 
 <p align="center"><sub>LINUX RP SERIES / 01 · Независимая инструкция сообщества · Код и собственные иллюстрации — MIT</sub></p>
