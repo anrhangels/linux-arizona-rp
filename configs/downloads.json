@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "launcher": {
+    "release_api": "https://api.github.com/repos/dogoran-el/arizona-launcher/releases/latest",
+    "asset": "Arizona-Games-Launcher.exe"
+  },
+  "proton": {
+    "url": "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton11-11/GE-Proton11-11-x86_64.tar.gz",
+    "sha256": "aa85986cada5709aa8bbfa8add7f3bfb925cbe15710c98995898d308ff2ca3c1",
+    "directory": "GE-Proton11-11-x86_64"
+  },
+  "umu": {
+    "url": "https://github.com/Faugus/umu-launcher/releases/download/1.4.4-patch/umu-run",
+    "sha256": "d3f2f0248e5ad39a34659a816acda5cde335568b6b9eab8ee0ef0732252465c6"
+  },
+  "emoji": {
+    "url": "https://raw.githubusercontent.com/googlefonts/noto-emoji/99701e07d3d1fe1bdbcdb14964547f0fd592966f/2D/fonts/NotoColorEmoji.ttf",
+    "git_sha1": "e605743d05f261634f0b3f68a439d9b557d8f335",
+    "size": 10730124,
+    "license_url": "https://raw.githubusercontent.com/googlefonts/noto-emoji/99701e07d3d1fe1bdbcdb14964547f0fd592966f/2D/fonts/LICENSE"
+  }
+}

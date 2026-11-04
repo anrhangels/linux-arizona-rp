@@ -1,0 +1,21 @@
+name: Проверка инструментов
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.12', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Тесты без установки игры
+        run: python -m unittest discover -s tests -v
+      - name: Синтаксис оболочки
+        run: bash -n install.sh scripts/arizona.sh
+      - name: План без установки и сетевых запросов
+        run: bash install.sh --plan

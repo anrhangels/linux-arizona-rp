@@ -1,0 +1,35 @@
+name: Ошибка установки или запуска
+description: Сообщить проблему с Arizona RP на Linux
+title: '[Ошибка] '
+body:
+  - type: input
+    id: system
+    attributes:
+      label: Дистрибутив и версия
+    validations:
+      required: true
+  - type: input
+    id: graphics
+    attributes:
+      label: Видеокарта, драйвер и графический сеанс
+      placeholder: NVIDIA / AMD / Intel; версия драйвера; X11 или Wayland
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Команда запуска и шаги воспроизведения
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Что ожидали и что произошло
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Относящийся к ошибке фрагмент журнала
+      description: Перед публикацией удалите личные данные.
+      render: text
