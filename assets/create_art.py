@@ -42,9 +42,9 @@ def hero(c):
  rect(c,0,0,1400,660,BG);text(c,'ANRHANGELS  /  LINUX RP SERIES',42,37,13,MUTED,'Nimbus Mono PS');text(c,'INSTALL RECORD  01',1145,37,13,ORANGE,'Nimbus Mono PS');line(c,[(42,57),(1358,57)],'#40344A')
  scene(c)
  text(c,'АРИЗОНА',42,178,102,INK,'Nimbus Sans Narrow',True);text(c,'НА LINUX.',42,279,102,ORANGE,'Nimbus Sans Narrow',True)
- rect(c,44,315,35,3,ORANGE);text(c,'Твоя следующая остановка — Mesa.',42,362,27,INK)
+ rect(c,44,315,35,3,ORANGE);text(c,'Твой маршрут в Arizona RP.',42,362,27,INK)
  text(c,'Официальный клиент. Собранное окружение.',42,408,20,MUTED);text(c,'Проверенные настройки. Свой маршрут домой.',42,438,20,MUTED)
- for x,title,desc in [(43,'01 / ПОДГОТОВИТЬ','Flatpak + Faugus'),(270,'02 / НАСТРОИТЬ','Proton + шрифты'),(490,'03 / ИГРАТЬ','Лаунчер + Mesa')]:
+ for x,title,desc in [(43,'01 / ПОДГОТОВИТЬ','Flatpak + Faugus'),(270,'02 / НАСТРОИТЬ','Proton + шрифты'),(490,'03 / ИГРАТЬ','Лаунчер + игра')]:
   text(c,title,x,519,12,ORANGE,'Nimbus Mono PS');text(c,desc,x,547,18,INK)
  line(c,[(42,595),(1358,595)],'#40344A');text(c,'ARIZONA RP  ×  GE-PROTON  ×  FAUGUS',42,632,14,MUTED,'Nimbus Mono PS');text(c,'РУССКИЕ ИНСТРУКЦИИ / ОТКРЫТЫЙ КОД',943,632,13,MUTED,'Nimbus Mono PS')
 def route(c):
@@ -56,7 +56,7 @@ def route(c):
 def fonts(c):
  rect(c,0,0,1400,315,BG);text(c,'ЧИТАЕТСЯ. ВИДНО. ПОНЯТНО.',36,52,33,INK,'Nimbus Sans Narrow',True)
  text(c,'ШРИФТЫ / КИРИЛЛИЦА / ЭМОДЗИ',36,85,14,ORANGE,'Nimbus Mono PS')
- for x,label,sample,co in [(36,'КИРИЛЛИЦА','Привет, Mesa.',LILAC),(497,'ЛАТИНИЦА','Welcome home.',ORANGE),(958,'ЭМОДЗИ','',TEAL)]:
+ for x,label,sample,co in [(36,'КИРИЛЛИЦА','Привет, мир.',LILAC),(497,'ЛАТИНИЦА','Welcome home.',ORANGE),(958,'ЭМОДЗИ','',TEAL)]:
   rect(c,x,115,407,148,'#201C2C');text(c,label,x+19,145,12,co,'Nimbus Mono PS');text(c,sample,x+19,213,34,INK,'Nimbus Sans',True)
  # Smiley and heart, vector-native assets instead of platform-dependent emoji fonts.
  circle(c,1020,205,29,TEAL);circle(c,1011,199,3,BG);circle(c,1029,199,3,BG)
