@@ -257,27 +257,30 @@ def ensure_umu():
     return target
 
 
-def dejavu_font():
-    selected = call(['fc-match', '-f', '%{file}', 'DejaVu Sans'],
+def dejavu_font(bold=False):
+    filename = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
+    pattern = "DejaVu Sans:style=Bold" if bold else "DejaVu Sans"
+    selected = call(['fc-match', '-f', '%{file}', pattern],
                     capture_output=True, text=True).stdout.strip()
     font = Path(selected)
-    if font.is_file() and font.name.lower() == 'dejavusans.ttf':
+    if font.is_file() and font.name.lower() == filename.lower():
         return font
     # Faugus' installed runtime may provide the font even if the host does not.
     runtime = call(['flatpak', 'info', '--show-runtime', APP],
                    capture_output=True, text=True).stdout.strip()
     location = call(['flatpak', 'info', '--show-location', runtime],
                     capture_output=True, text=True).stdout.strip()
-    font = Path(location) / 'files/share/fonts/dejavu/DejaVuSans.ttf'
+    font = Path(location) / 'files/share/fonts/dejavu' / filename
     if font.is_file():
         print('DejaVu Sans найден в установленном runtime Faugus.', flush=True)
         return font
-    raise ValueError('Не найден DejaVuSans.ttf; установите пакет DejaVu для вашего дистрибутива')
+    raise ValueError('Не найден ' + filename + '; установите пакет DejaVu для вашего дистрибутива')
 
 
 def command(prefix, runner, exe, logs, extra=()):
     umu = DATA / 'umu-run'
-    args = ['flatpak', 'run', '--command=env', '--filesystem=' + str(DATA),
+    args = ['flatpak', 'run', '--env=LANG=ru_RU.UTF-8',
+            '--env=LC_ALL=ru_RU.UTF-8', '--command=env', '--filesystem=' + str(DATA),
             '--filesystem=' + str(prefix), '--filesystem=' + str(logs),
             '--filesystem=' + str(CACHE) + ':ro']
     if isinstance(exe, Path):
@@ -333,6 +336,21 @@ def font_plan(windows=None):
     return result
 
 
+def install_azrtc_font_files(prefix, snapshot):
+    """AZRTC reads exact file names; Wine family replacements cannot supply them."""
+    folder = prefix / 'drive_c/windows/Fonts'
+    for name, bold in [('segoeui.ttf', False), ('seguisb.ttf', True)]:
+        target = folder / name
+        # Preserve original Microsoft fonts and any user-provided alternative.
+        if target.exists():
+            continue
+        if target.is_symlink():
+            raise ValueError('Повреждённая ссылка шрифта: ' + str(target))
+        source = dejavu_font(bold=bold)
+        snapshot.write(target, source.read_bytes())
+        print('AZRTC: ' + name + ' → ' + source.name, flush=True)
+
+
 def install_fonts(prefix, runner, logs, snapshot, windows=None):
     fonts = font_plan(windows)
     # Back up registry before invoking Wine, which changes registry files as a whole.
@@ -347,6 +365,7 @@ def install_fonts(prefix, runner, logs, snapshot, windows=None):
                 run_logged(command(prefix, runner, 'reg.exe', logs,
                            ['add', hive + '\\' + key, '/v', family, '/t', 'REG_SZ', '/d', name, '/f']),
                            logs / ('font-' + name + '-' + hive + '-' + str(FONT_KEYS.index(key)) + '.log'))
+    install_azrtc_font_files(prefix, snapshot)
     # Add fallback family mappings only when original Segoe wasn't supplied.
     families = {family for _, _, family in fonts}
     for missing, fallback in [('Segoe UI', 'DejaVu Sans'), ('Segoe UI Semibold', 'DejaVu Sans'),

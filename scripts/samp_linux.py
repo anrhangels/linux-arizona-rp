@@ -125,6 +125,9 @@ def configure_hud(gameid):
 
 def flatpak_launch_command(game):
     args = ["flatpak", "run"]
+    # Set inside the sandbox: host LANG alone can be overridden by LC_ALL.
+    if game.get("gameid") == "arizona-launcher":
+        args += ["--env=LANG=ru_RU.UTF-8", "--env=LC_ALL=ru_RU.UTF-8"]
     prefix = Path(game.get("prefix", "")).expanduser()
     runner = Path(game.get("runner", "")).expanduser()
     if prefix.is_absolute() and (prefix / "drive_c").is_dir():

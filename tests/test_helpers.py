@@ -11,6 +11,15 @@ spec.loader.exec_module(helpers)
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_russian_locale_is_scoped_to_arizona(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(helpers, "DATA", Path(tmp)):
+                arizona = helpers.flatpak_launch_command({"gameid": "arizona-launcher"})
+                other = helpers.flatpak_launch_command({"gameid": "other"})
+        self.assertIn("--env=LC_ALL=ru_RU.UTF-8", arizona)
+        self.assertIn("--env=LANG=ru_RU.UTF-8", arizona)
+        self.assertFalse(any(arg.startswith("--env=") for arg in other))
+
     def test_unknown_game_is_rejected(self):
         with self.assertRaises(ValueError):
             helpers.select_game([{"gameid": "known"}], "unknown")

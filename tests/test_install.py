@@ -203,6 +203,29 @@ class InstallerTests(unittest.TestCase):
                 with self.assertRaises(tarfile.TarError):setup.ensure_runner()
             self.assertFalse((root/'escaped').exists())
 
+    def test_azrtc_font_files_preserve_original_and_backup_new_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);prefix=root/'prefix';fonts=prefix/'drive_c/windows/Fonts'
+            fonts.mkdir(parents=True);(fonts/'segoeui.ttf').write_bytes(b'original')
+            bold=root/'DejaVuSans-Bold.ttf';bold.write_bytes(b'free bold')
+            with patch.object(setup,'HOME',root), patch.object(setup,'STATE',root/'state'), patch.object(setup,'dejavu_font',return_value=bold) as lookup:
+                snapshot=setup.Snapshot()
+                setup.install_azrtc_font_files(prefix,snapshot)
+                self.assertEqual((fonts/'segoeui.ttf').read_bytes(),b'original')
+                self.assertEqual((fonts/'seguisb.ttf').read_bytes(),b'free bold')
+                lookup.assert_called_once_with(bold=True)
+                with patch.object(setup,'require_closed'):
+                    setup.restore(snapshot.root/'restore.json')
+                self.assertFalse((fonts/'seguisb.ttf').exists())
+                self.assertEqual((fonts/'segoeui.ttf').read_bytes(),b'original')
+
+    def test_azrtc_does_not_replace_dangling_font_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);fonts=root/'drive_c/windows/Fonts';fonts.mkdir(parents=True)
+            (fonts/'segoeui.ttf').symlink_to(root/'missing')
+            with self.assertRaises(ValueError):
+                setup.install_azrtc_font_files(root,Mock())
+
     def test_original_segoe_removes_only_our_old_fallback(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);prefix=root/'prefix';prefix.mkdir();source=root/'segoeui.ttf';source.write_bytes(b'font')
@@ -213,6 +236,7 @@ class InstallerTests(unittest.TestCase):
                 return Mock(returncode=0, stdout=name+'    REG_MULTI_SZ    '+value+'\n')
             with patch.object(setup,'HOME',root),patch.object(setup,'STATE',root/'state'), \
                  patch.dict(os.environ,{'XDG_DATA_HOME':str(root/'share')}), \
+                 patch.object(setup,'install_azrtc_font_files'), \
                  patch.object(setup,'font_plan',return_value=[(source,'segoeui.ttf','Segoe UI (TrueType)')]), \
                  patch.object(setup,'run_logged',side_effect=lambda args,path:calls.append(args)), \
                  patch.object(setup.subprocess,'run',side_effect=query),patch.object(setup,'call'):
