@@ -241,6 +241,40 @@ def ensure_runner():
     return runner
 
 
+def ensure_umu():
+    """Reuse only the exact pinned UMU; another game's copy is never overwritten."""
+    target = DATA / 'umu-run'
+    spec = DOWNLOADS['umu']
+    if not digest_matches(target, spec):
+        source = FAUGUS / 'umu-run'
+        contents = source.read_bytes() if source.is_file() else None
+        if contents is not None and hashlib.sha256(contents).hexdigest() == spec['sha256']:
+            atomic(target, contents)
+            print('Используется установленный UMU: SHA-256 совпала.', flush=True)
+        else:
+            fetch(spec, target)
+    target.chmod(0o755)
+    return target
+
+
+def dejavu_font():
+    selected = call(['fc-match', '-f', '%{file}', 'DejaVu Sans'],
+                    capture_output=True, text=True).stdout.strip()
+    font = Path(selected)
+    if font.is_file() and font.name.lower() == 'dejavusans.ttf':
+        return font
+    # Faugus' installed runtime may provide the font even if the host does not.
+    runtime = call(['flatpak', 'info', '--show-runtime', APP],
+                   capture_output=True, text=True).stdout.strip()
+    location = call(['flatpak', 'info', '--show-location', runtime],
+                    capture_output=True, text=True).stdout.strip()
+    font = Path(location) / 'files/share/fonts/dejavu/DejaVuSans.ttf'
+    if font.is_file():
+        print('DejaVu Sans найден в установленном runtime Faugus.', flush=True)
+        return font
+    raise ValueError('Не найден DejaVuSans.ttf; установите пакет DejaVu для вашего дистрибутива')
+
+
 def command(prefix, runner, exe, logs, extra=()):
     umu = DATA / 'umu-run'
     args = ['flatpak', 'run', '--command=env', '--filesystem=' + str(DATA),
@@ -267,7 +301,9 @@ def run_logged(args, logfile):
 def launcher_in(prefix):
     root = prefix / 'drive_c/users'
     found = list(root.glob('*/AppData/Local/Programs/Arizona Games Launcher/Arizona Games Launcher.exe'))
-    found = [p for p in found if p.is_file() and p.resolve().is_relative_to(prefix.resolve())]
+    # Proton can alias the host username to steamuser: compare actual files.
+    found = list(dict.fromkeys(p.resolve() for p in found
+                              if p.is_file() and p.resolve().is_relative_to(prefix.resolve())))
     if len(found) > 1:
         raise ValueError('Найдено несколько лаунчеров; выберите префикс с одной установкой')
     return found[0] if found else None
@@ -276,10 +312,7 @@ def launcher_in(prefix):
 def font_plan(windows=None):
     # Use the pinned CBDT font across distros (Fedora's packaged font is COLRv1).
     emoji = fetch(DOWNLOADS['emoji'], CACHE / 'NotoColorEmoji.ttf')
-    matches = call(['fc-match', '-f', '%{file}', 'DejaVu Sans'], capture_output=True, text=True).stdout
-    dejavu = Path(matches)
-    if not dejavu.is_file() or dejavu.name.lower() != 'dejavusans.ttf':
-        raise ValueError('Не найден DejaVuSans.ttf; установите пакет DejaVu для вашего дистрибутива')
+    dejavu = dejavu_font()
     result = [(emoji, 'NotoColorEmoji.ttf', 'Noto Color Emoji (TrueType)'),
               (dejavu, 'DejaVuSans.ttf', 'DejaVu Sans (TrueType)')]
     if windows:
@@ -447,7 +480,7 @@ def main():
         logs.mkdir(parents=True, mode=0o700)
         setup_flatpak()
         runner = ensure_runner()
-        umu = fetch(DOWNLOADS['umu'], DATA / 'umu-run'); umu.chmod(0o755)
+        ensure_umu()
         exe = launcher_in(prefix)
         if args.fonts_only and not exe:
             raise ValueError('Для --fonts-only нужен уже установленный лаунчер в этом префиксе')

@@ -17,6 +17,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class InstallerTests(unittest.TestCase):
+    def test_proton_user_alias_is_one_launcher_but_distinct_installs_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prefix=Path(tmp);users=prefix/'drive_c/users'
+            exe=users/'steamuser/AppData/Local/Programs/Arizona Games Launcher/Arizona Games Launcher.exe'
+            exe.parent.mkdir(parents=True);exe.write_bytes(b'MZ')
+            (users/'hostuser').symlink_to('steamuser',target_is_directory=True)
+            self.assertEqual(setup.launcher_in(prefix),exe)
+            second=users/'other/AppData/Local/Programs/Arizona Games Launcher/Arizona Games Launcher.exe'
+            second.parent.mkdir(parents=True);second.write_bytes(b'MZ')
+            with self.assertRaises(ValueError):setup.launcher_in(prefix)
+
     def test_plan_never_creates_files_or_calls_network(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
@@ -113,6 +124,30 @@ class InstallerTests(unittest.TestCase):
             with patch.object(setup,'HOME',root),patch.dict(os.environ,{'XDG_CONFIG_HOME':str(config)}):
                 setup.download_directories()
             self.assertFalse(sentinel.exists())
+
+    def test_verified_faugus_umu_reused_without_network(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'faugus/umu-run';source.parent.mkdir();source.write_bytes(b'known pinned UMU')
+            downloads={**setup.DOWNLOADS,'umu':{'url':'https://example.test/umu','sha256':hashlib.sha256(source.read_bytes()).hexdigest()}}
+            with patch.object(setup,'DATA',root/'data'),patch.object(setup,'FAUGUS',source.parent),patch.object(setup,'DOWNLOADS',downloads),patch.object(setup,'urlopen',side_effect=AssertionError('network')):
+                target=setup.ensure_umu();self.assertEqual(target.read_bytes(),source.read_bytes());self.assertTrue(target.stat().st_mode & 0o100)
+
+    def test_wrong_faugus_umu_not_trusted_or_overwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'faugus/umu-run';source.parent.mkdir();source.write_bytes(b'wrong version')
+            def fetch(spec,target):
+                target.parent.mkdir();target.write_bytes(b'pinned download');return target
+            with patch.object(setup,'DATA',root/'data'),patch.object(setup,'FAUGUS',source.parent),patch.object(setup,'fetch',side_effect=fetch) as network:
+                target=setup.ensure_umu();network.assert_called_once();self.assertEqual(target.read_bytes(),b'pinned download')
+            self.assertEqual(source.read_bytes(),b'wrong version')
+
+    def test_dejavu_from_runtime_when_host_font_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);font=root/'runtime/files/share/fonts/dejavu/DejaVuSans.ttf';font.parent.mkdir(parents=True);font.write_bytes(b'font')
+            def call(args,**kwargs):
+                if args[0]=='fc-match':return Mock(stdout=str(root/'OtherFont.otf'))
+                return Mock(stdout='org.gnome.Platform/x86_64/51' if '--show-runtime' in args else str(root/'runtime'))
+            with patch.object(setup,'call',side_effect=call):self.assertEqual(setup.dejavu_font(),font)
 
     def test_current_launcher_is_resolved_dynamically(self):
         release={'tag_name':'v9.9.9','assets':[{'name':'Arizona-Games-Launcher.exe',
